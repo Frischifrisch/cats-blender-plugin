@@ -229,11 +229,11 @@ class FnSDEF():
         cls.driver_function(shapkey, obj.name, bulk_update=False, use_skip=False, use_scale=use_scale)
         # benchmark
         t = time.time()
-        for i in range(cls.BENCH_LOOP):
+        for _ in range(cls.BENCH_LOOP):
             cls.driver_function(shapkey, obj.name, bulk_update=False, use_skip=False, use_scale=use_scale)
         default_time = time.time() - t
         t = time.time()
-        for i in range(cls.BENCH_LOOP):
+        for _ in range(cls.BENCH_LOOP):
             cls.driver_function(shapkey, obj.name, bulk_update=True, use_skip=False, use_scale=use_scale)
         bulk_time = time.time() - t
         result = default_time > bulk_time
@@ -254,7 +254,9 @@ class FnSDEF():
         if bulk_update is None:
             bulk_update = cls.__get_benchmark_result(obj, shapekey, use_scale, use_skip)
         # Add the driver to the shapekey
-        f = obj.data.shape_keys.driver_add('key_blocks["'+cls.SHAPEKEY_NAME+'"].value', -1)
+        f = obj.data.shape_keys.driver_add(
+            f'key_blocks["{cls.SHAPEKEY_NAME}"].value', -1
+        )
         if hasattr(f.driver, 'show_debug_info'):
             f.driver.show_debug_info = False
         f.driver.type = 'SCRIPTED'
@@ -268,7 +270,7 @@ class FnSDEF():
                 use_skip = False
             mod = obj.modifiers.get('mmd_bone_order_override')
             variables = f.driver.variables
-            for name in set(data[i].name for data in cls.g_verts[_hash(obj)].values() for i in range(2)): # add required bones for dependency graph
+            for name in {data[i].name for data in cls.g_verts[_hash(obj)].values() for i in range(2)}: # add required bones for dependency graph
                 var = variables.new()
                 var.type = 'TRANSFORMS'
                 var.targets[0].id = mod.object
@@ -300,7 +302,9 @@ class FnSDEF():
     @classmethod
     def clear_cache(cls, obj=None, unused_only=False):
         if unused_only:
-            valid_keys = set(_hash(i) for i in bpy.data.objects if i.type == 'MESH' and i != obj)
+            valid_keys = {
+                _hash(i) for i in bpy.data.objects if i.type == 'MESH' and i != obj
+            }
             for key in (cls.g_verts.keys()-valid_keys):
                 del cls.g_verts[key]
             for key in (cls.g_shapekey_data.keys()-cls.g_verts.keys()):
